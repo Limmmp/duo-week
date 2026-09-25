@@ -33,6 +33,8 @@ export default function Board({ userEmail }: { userEmail: string }) {
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('all')
   const [editing, setEditing] = useState<Task | null>(null)
+  // Колонка, для которой открыто окно нового дела (BACKLOG = «Без даты»).
+  const [creatingIn, setCreatingIn] = useState<string | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
 
   const days = useMemo(() => weekDays(weekStart), [weekStart])
@@ -113,14 +115,12 @@ export default function Board({ userEmail }: { userEmail: string }) {
     }
   }
 
-  async function create(container: string, title: string) {
-    const list = columns.get(container) ?? []
-    const position = (list.at(-1)?.position ?? 0) + 1000
+  async function create(fields: Pick<Task, 'title' | 'due'> & Partial<Pick<Task, 'notes' | 'assignee'>>) {
+    const list = columns.get(fields.due ?? BACKLOG) ?? []
     const draft = {
-      title,
-      due: container === BACKLOG ? null : container,
       assignee: filter !== 'all' ? filter : (me?.id ?? null),
-      position,
+      ...fields,
+      position: (list.at(-1)?.position ?? 0) + 1000,
     }
     const { data, error } = await supabase
       .from('tasks')
@@ -275,7 +275,8 @@ export default function Board({ userEmail }: { userEmail: string }) {
                     isToday={id === todayISO}
                     tasks={columns.get(id) ?? []}
                     members={members}
-                    onAdd={(title) => create(id, title)}
+                    onAdd={(title) => create({ title, due: id })}
+                    onCreate={() => setCreatingIn(id)}
                     onToggle={(t) => patch(t.id, { done: !t.done })}
                     onOpen={setEditing}
                   />
@@ -285,7 +286,8 @@ export default function Board({ userEmail }: { userEmail: string }) {
                 id={BACKLOG}
                 tasks={columns.get(BACKLOG) ?? []}
                 members={members}
-                onAdd={(title) => create(BACKLOG, title)}
+                onAdd={(title) => create({ title, due: null })}
+                onCreate={() => setCreatingIn(BACKLOG)}
                 onToggle={(t) => patch(t.id, { done: !t.done })}
                 onOpen={setEditing}
               />
@@ -309,6 +311,21 @@ export default function Board({ userEmail }: { userEmail: string }) {
           onDelete={() => {
             remove(editing.id)
             setEditing(null)
+          }}
+        />
+      )}
+
+      {creatingIn && (
+        <TaskDialog
+          defaults={{
+            due: creatingIn === BACKLOG ? null : creatingIn,
+            assignee: filter !== 'all' ? filter : (me?.id ?? null),
+          }}
+          members={members}
+          onClose={() => setCreatingIn(null)}
+          onSave={(fields) => {
+            create({ title: fields.title ?? '', due: fields.due ?? null, notes: fields.notes, assignee: fields.assignee })
+            setCreatingIn(null)
           }}
         />
       )}

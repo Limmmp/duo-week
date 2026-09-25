@@ -14,11 +14,12 @@ type Props = {
   date?: Date
   isToday?: boolean
   onAdd: (title: string) => void
+  onCreate: () => void
   onToggle: (t: Task) => void
   onOpen: (t: Task) => void
 }
 
-export default function Column({ id, tasks, members, weekdayIndex, date, isToday, onAdd, onToggle, onOpen }: Props) {
+export default function Column({ id, tasks, members, weekdayIndex, date, isToday, onAdd, onCreate, onToggle, onOpen }: Props) {
   const { setNodeRef, isOver } = useDroppable({ id })
   const [draft, setDraft] = useState('')
   const isBacklog = weekdayIndex === undefined
@@ -42,7 +43,14 @@ export default function Column({ id, tasks, members, weekdayIndex, date, isToday
         isToday ? 'border-orange-400/70 bg-today' : isBacklog ? 'border-dashed border-line bg-surface-2' : 'border-line bg-surface'
       } ${isOver ? 'ring-2 ring-ink/20' : ''}`}
     >
-      <header className="flex items-baseline gap-2 px-2 pb-2 pt-1">
+      <header
+        role="button"
+        tabIndex={0}
+        title="Новое дело на этот день"
+        onClick={onCreate}
+        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onCreate())}
+        className="flex items-baseline gap-2 rounded-lg px-2 pb-2 pt-1 transition-colors hover:bg-ink/5"
+      >
         <h2 className={`text-sm font-semibold ${weekend && !isToday ? 'text-ink-2' : ''}`}>{title}</h2>
         {date && <span className="text-xs text-ink-3">{shortDate(date)}</span>}
         {isToday && (
@@ -55,7 +63,11 @@ export default function Column({ id, tasks, members, weekdayIndex, date, isToday
         )}
       </header>
 
-      <div ref={setNodeRef} className="flex min-h-12 flex-col gap-1.5">
+      <div
+        ref={setNodeRef}
+        onClick={(e) => e.target === e.currentTarget && onCreate()}
+        className="flex min-h-12 cursor-pointer flex-col gap-1.5"
+      >
         <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           {tasks.map((t) => (
             <TaskCard key={t.id} task={t} members={members} onToggle={() => onToggle(t)} onOpen={() => onOpen(t)} />

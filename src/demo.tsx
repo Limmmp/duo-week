@@ -20,10 +20,13 @@ const titles: [string, number | null, string | null, boolean][] = [
 ]
 const tasks = titles.map(([title, day, assignee, done], i) => ({
   id: 't' + i, title, due: day === null ? null : d(day), assignee, done, position: i * 1000,
-  notes: i === 3 ? 'Хедер + блок цен' : null, created_at: '',
+  notes: i === 3 ? 'Хедер + блок цен, потом показать клиенту' : i === 6 ? 'Паром в 10:30 с Морвокзала, взять термос и пауэрбанк. Вернуться к 18:00' : null, created_at: '',
 }))
 const q = (data: unknown): any => new Proxy({}, {
   get: (_t, k) => (k === 'then' ? (r: any) => r({ data, error: null }) : () => q(data)),
 })
-;(supabase as any).from = (t: string) => q(t === 'members' ? members : tasks)
+;(supabase as any).from = (t: string) => {
+  const base = q(t === 'members' ? members : tasks)
+  return new Proxy(base, { get: (o, k) => k === 'insert' ? (row: any) => q({ id: crypto.randomUUID(), done: false, notes: null, created_at: '', ...row }) : o[k] })
+}
 createRoot(document.getElementById('root')!).render(<Board userEmail="me@x" />)

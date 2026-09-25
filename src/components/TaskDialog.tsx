@@ -3,23 +3,28 @@ import { Trash2, X } from 'lucide-react'
 import type { Member, Task } from '../types'
 
 type Props = {
-  task: Task
+  /** Нет задачи — окно создаёт новое дело со значениями из defaults. */
+  task?: Task
+  defaults?: Pick<Task, 'due' | 'assignee'>
   members: Member[]
   onClose: () => void
   onSave: (changes: Partial<Task>) => void
-  onDelete: () => void
+  onDelete?: () => void
 }
 
-export default function TaskDialog({ task, members, onClose, onSave, onDelete }: Props) {
+export default function TaskDialog({ task, defaults, members, onClose, onSave, onDelete }: Props) {
   const ref = useRef<HTMLDialogElement>(null)
-  const [title, setTitle] = useState(task.title)
-  const [notes, setNotes] = useState(task.notes ?? '')
-  const [due, setDue] = useState(task.due ?? '')
-  const [assignee, setAssignee] = useState<string | null>(task.assignee)
+  const titleRef = useRef<HTMLInputElement>(null)
+  const [title, setTitle] = useState(task?.title ?? '')
+  const [notes, setNotes] = useState(task?.notes ?? '')
+  const [due, setDue] = useState(task?.due ?? defaults?.due ?? '')
+  const [assignee, setAssignee] = useState<string | null>(task ? task.assignee : (defaults?.assignee ?? null))
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   useEffect(() => {
     ref.current?.showModal()
+    // showModal() сам фокусирует первую кнопку — для нового дела сразу ставим курсор в название.
+    if (!task) titleRef.current?.focus()
   }, [])
 
   function submit(e: FormEvent) {
@@ -39,7 +44,7 @@ export default function TaskDialog({ task, members, onClose, onSave, onDelete }:
     >
       <form onSubmit={submit} className="p-5">
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold">Дело</h2>
+          <h2 className="text-base font-semibold">{task ? 'Дело' : 'Новое дело'}</h2>
           <button type="button" onClick={onClose} aria-label="Закрыть" className="-mr-2 grid size-10 place-items-center rounded-lg text-ink-2 hover:bg-surface-2">
             <X size={18} />
           </button>
@@ -48,6 +53,7 @@ export default function TaskDialog({ task, members, onClose, onSave, onDelete }:
         <label htmlFor="t-title" className="mt-3 block text-sm font-medium">Название</label>
         <input
           id="t-title"
+          ref={titleRef}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
@@ -99,7 +105,7 @@ export default function TaskDialog({ task, members, onClose, onSave, onDelete }:
         </div>
 
         <div className="mt-6 flex items-center gap-2">
-          {confirmDelete ? (
+          {!onDelete ? null : confirmDelete ? (
             <button type="button" onClick={onDelete} className="h-11 rounded-xl bg-danger px-4 text-sm font-semibold text-white">
               Точно удалить
             </button>
@@ -114,7 +120,7 @@ export default function TaskDialog({ task, members, onClose, onSave, onDelete }:
             </button>
           )}
           <button type="submit" className="ml-auto h-11 rounded-xl bg-accent px-5 text-sm font-semibold text-on-accent hover:opacity-90">
-            Сохранить
+            {task ? 'Сохранить' : 'Добавить'}
           </button>
         </div>
       </form>

@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Check, StickyNote } from 'lucide-react'
+import { Check } from 'lucide-react'
 import type { Member, Task } from '../types'
 
 type Props = {
@@ -57,9 +57,18 @@ export default function TaskCard({ task, members, overlay, onToggle, onOpen }: P
         >
           {task.title}
         </span>
-        <span className="mt-1 flex items-center gap-2 text-xs text-ink-3">
+        {task.notes && (
+          <span
+            className={`mt-1 line-clamp-2 whitespace-pre-line break-words text-xs leading-snug ${
+              task.done ? 'text-ink-3' : 'text-ink-2'
+            }`}
+          >
+            {task.notes}
+          </span>
+        )}
+        <span className="mt-1 flex items-center gap-1.5 text-xs text-ink-3">
+          {who && <span aria-hidden className="size-1.5 rounded-full" style={{ background: who.color }} />}
           {who ? who.name : 'Вместе'}
-          {task.notes && <StickyNote size={12} aria-label="Есть заметка" />}
         </span>
       </button>
     </div>
