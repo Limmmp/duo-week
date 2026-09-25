@@ -2,23 +2,16 @@ import { useState, type FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
 
 export default function Login() {
-  const [mode, setMode] = useState<'in' | 'up'>('in')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [info, setInfo] = useState<string | null>(null)
 
   async function submit(e: FormEvent) {
     e.preventDefault()
     setBusy(true)
     setError(null)
-    setInfo(null)
-    const creds = { email: email.trim(), password }
-    const { data, error } =
-      mode === 'in'
-        ? await supabase.auth.signInWithPassword(creds)
-        : await supabase.auth.signUp({ ...creds, options: { emailRedirectTo: location.href } })
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
     setBusy(false)
     if (error) {
       setError(
@@ -28,9 +21,6 @@ export default function Login() {
             ? 'Почта не подтверждена — проверь письмо от Supabase.'
             : error.message,
       )
-    } else if (mode === 'up' && !data.session) {
-      setInfo('Готово! Открой письмо и подтверди почту, потом войди.')
-      setMode('in')
     }
   }
 
@@ -62,23 +52,16 @@ export default function Login() {
         <input
           id="password"
           type="password"
-          autoComplete={mode === 'in' ? 'current-password' : 'new-password'}
+          autoComplete="current-password"
           required
-          minLength={6}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="mt-1.5 h-11 w-full rounded-xl border border-line bg-surface-2 px-3 text-base outline-none focus:border-ink"
         />
-        {mode === 'up' && <p className="mt-1.5 text-xs text-ink-3">Минимум 6 символов.</p>}
 
         {error && (
           <p role="alert" className="mt-4 text-sm text-danger">
             {error}
-          </p>
-        )}
-        {info && (
-          <p aria-live="polite" className="mt-4 text-sm text-ink-2">
-            {info}
           </p>
         )}
 
@@ -87,17 +70,7 @@ export default function Login() {
           disabled={busy}
           className="mt-6 h-11 w-full rounded-xl bg-accent text-sm font-semibold text-on-accent transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {busy ? 'Секунду…' : mode === 'in' ? 'Войти' : 'Зарегистрироваться'}
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setMode(mode === 'in' ? 'up' : 'in')
-            setError(null)
-          }}
-          className="mt-3 h-11 w-full rounded-xl text-sm text-ink-2 hover:bg-surface-2"
-        >
-          {mode === 'in' ? 'Первый раз? Создать аккаунт' : 'Уже есть аккаунт? Войти'}
+          {busy ? 'Секунду…' : 'Войти'}
         </button>
       </form>
     </div>
