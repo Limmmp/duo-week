@@ -25,6 +25,7 @@ const WEEKDAYS = ['Понедельник', 'Вторник', 'Среда', 'Ч�
 const MONTHS = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек']
 
 export const weekdayName = (i: number) => WEEKDAYS[i]
+export const weekdayShort = (i: number) => ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'][i]
 export const shortDate = (d: Date) => `${d.getDate()} ${MONTHS[d.getMonth()]}`
 
 export function weekLabel(weekStart: Date): string {

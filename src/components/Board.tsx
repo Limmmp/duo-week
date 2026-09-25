@@ -190,69 +190,82 @@ export default function Board({ userEmail }: { userEmail: string }) {
   const isCurrentWeek = toISODate(weekStart) === toISODate(startOfWeek(new Date()))
 
   return (
-    <div className="min-h-dvh">
-      <header className="z-20 border-b sm:sticky sm:top-0 border-line bg-bg/90 backdrop-blur">
-        <div className="mx-auto flex max-w-[1800px] flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3 sm:px-6">
-          <div className="mr-auto min-w-0">
-            <h1 className="text-lg font-semibold leading-tight">Неделя на двоих</h1>
-            <p className="text-sm tabular-nums text-ink-3">
-              {weekLabel(weekStart)} · готово {doneCount} из {weekTasks.length}
-            </p>
+    <div className="min-h-dvh p-2 sm:p-4 2xl:p-6">
+      <div className="mx-auto max-w-[1880px] rounded-2xl bg-board px-3 pb-2 pt-3 2xl:px-4">
+        <header className="flex flex-wrap items-center gap-x-3 gap-y-2 pb-1">
+          <div className="mr-auto flex min-w-0 items-baseline gap-2">
+            <h1 className="text-base font-bold">Неделя на двоих</h1>
+            <span className="text-sm tabular-nums text-ink-3">{weekLabel(weekStart)}</span>
+            {weekTasks.length > 0 && (
+              <span
+                title={`Готово ${doneCount} из ${weekTasks.length}`}
+                className={`rounded px-1.5 py-px text-xs font-medium tabular-nums text-white ${
+                  doneCount === weekTasks.length ? 'bg-ok' : 'bg-badge'
+                }`}
+              >
+                {doneCount}/{weekTasks.length}
+              </span>
+            )}
           </div>
 
-          <div className="flex items-center gap-1">
-            <IconButton label="Прошлая неделя" onClick={() => setWeekStart(addDays(weekStart, -7))}>
-              <ChevronLeft size={18} />
-            </IconButton>
-            <button
-              onClick={() => setWeekStart(startOfWeek(new Date()))}
-              disabled={isCurrentWeek}
-              className="h-10 rounded-lg px-3 text-sm font-medium hover:bg-surface disabled:opacity-40"
-            >
-              Сегодня
-            </button>
-            <IconButton label="Следующая неделя" onClick={() => setWeekStart(addDays(weekStart, 7))}>
-              <ChevronRight size={18} />
-            </IconButton>
-          </div>
-
-          <div role="radiogroup" aria-label="Чьи задачи" className="flex rounded-xl border border-line bg-surface p-1">
+          <div role="radiogroup" aria-label="Чьи задачи" className="flex items-center gap-1">
             {[{ id: 'all', name: 'Все', color: '' }, ...members].map((m) => (
               <button
                 key={m.id}
                 role="radio"
                 aria-checked={filter === m.id}
                 onClick={() => setFilter(m.id)}
-                className={`flex h-8 items-center gap-1.5 rounded-lg px-3 text-sm font-medium transition-colors ${
-                  filter === m.id ? 'bg-accent text-on-accent' : 'text-ink-2 hover:bg-surface-2'
+                className={`flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-[13px] font-medium transition-colors ${
+                  filter === m.id ? 'border-ink bg-ink text-board' : 'border-line text-ink-2 hover:bg-surface'
                 }`}
               >
-                {m.color && <span className="size-2 rounded-full" style={{ background: m.color }} />}
+                {m.color && (
+                  <span
+                    aria-hidden
+                    className="grid size-4 place-items-center rounded-full text-[9px] font-bold text-white"
+                    style={{ background: m.color }}
+                  >
+                    {m.name.slice(0, 1)}
+                  </span>
+                )}
                 {m.name}
               </button>
             ))}
           </div>
 
-          <IconButton label="Выйти" onClick={() => supabase.auth.signOut()}>
-            <LogOut size={18} />
-          </IconButton>
-        </div>
-      </header>
+          <div className="flex items-center">
+            <IconButton label="Прошлая неделя" onClick={() => setWeekStart(addDays(weekStart, -7))}>
+              <ChevronLeft size={18} />
+            </IconButton>
+            <button
+              onClick={() => setWeekStart(startOfWeek(new Date()))}
+              disabled={isCurrentWeek}
+              className="h-9 rounded-md px-2.5 text-[13px] font-medium text-ink-2 hover:bg-surface disabled:opacity-40"
+            >
+              Сегодня
+            </button>
+            <IconButton label="Следующая неделя" onClick={() => setWeekStart(addDays(weekStart, 7))}>
+              <ChevronRight size={18} />
+            </IconButton>
+            <IconButton label="Выйти" onClick={() => supabase.auth.signOut()}>
+              <LogOut size={17} />
+            </IconButton>
+          </div>
+        </header>
 
-      {error && (
-        <div role="alert" className="mx-auto mt-3 flex max-w-[1800px] items-center gap-3 px-4 text-sm text-danger sm:px-6">
-          {error}
-          <button onClick={load} className="underline underline-offset-2">
-            Повторить
-          </button>
-        </div>
-      )}
+        {error && (
+          <div role="alert" className="flex items-center gap-3 py-1 text-sm text-danger">
+            {error}
+            <button onClick={load} className="underline underline-offset-2">
+              Повторить
+            </button>
+          </div>
+        )}
 
-      <main className="mx-auto max-w-[1800px] px-4 py-4 sm:px-6">
         {loading ? (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8">
+          <div className="flex flex-col gap-3 py-3 lg:flex-row">
             {Array.from({ length: 8 }, (_, i) => (
-              <div key={i} className="h-48 animate-pulse rounded-2xl bg-surface" />
+              <div key={i} className="h-40 animate-pulse rounded-md bg-surface/70 lg:flex-1" />
             ))}
           </div>
         ) : (
@@ -263,7 +276,7 @@ export default function Board({ userEmail }: { userEmail: string }) {
             onDragEnd={onDragEnd}
             onDragCancel={() => setActiveId(null)}
           >
-            <div className="grid items-start gap-3 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8">
+            <div className="flex flex-col lg:min-h-[calc(100dvh-8rem)] lg:flex-row lg:overflow-x-auto">
               {days.map((d, i) => {
                 const id = toISODate(d)
                 return (
@@ -297,7 +310,7 @@ export default function Board({ userEmail }: { userEmail: string }) {
             </DragOverlay>
           </DndContext>
         )}
-      </main>
+      </div>
 
       {editing && (
         <TaskDialog
@@ -347,7 +360,7 @@ function IconButton({
       aria-label={label}
       title={label}
       onClick={onClick}
-      className="grid size-10 place-items-center rounded-lg text-ink-2 transition-colors hover:bg-surface hover:text-ink"
+      className="grid size-9 place-items-center rounded-md text-ink-2 transition-colors hover:bg-surface hover:text-ink"
     >
       {children}
     </button>

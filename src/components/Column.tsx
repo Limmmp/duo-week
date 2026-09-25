@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { Plus } from 'lucide-react'
-import { shortDate, weekdayName } from '../lib/dates'
+import { shortDate, weekdayName, weekdayShort } from '../lib/dates'
 import type { Member, Task } from '../types'
 import TaskCard from './TaskCard'
 
@@ -35,13 +35,15 @@ export default function Column({ id, tasks, members, weekdayIndex, date, isToday
     setDraft('')
   }
 
+  const allDone = tasks.length > 0 && doneCount === tasks.length
+
   return (
     <section
       aria-label={title}
       data-today={isToday || undefined}
-      className={`flex scroll-mt-4 flex-col rounded-2xl border p-2 transition-colors ${
-        isToday ? 'border-orange-400/70 bg-today' : isBacklog ? 'border-dashed border-line bg-surface-2' : 'border-line bg-surface'
-      } ${isOver ? 'ring-2 ring-ink/20' : ''}`}
+      className={`flex min-w-0 scroll-mt-4 flex-col border-line py-3 max-lg:border-t max-lg:first:border-t-0 lg:min-w-[160px] lg:flex-1 lg:basis-0 lg:border-l lg:px-2 lg:first:border-l-0 xl:px-2.5 ${
+        isOver ? 'bg-ink/[0.03]' : ''
+      }`}
     >
       <header
         role="button"
@@ -49,43 +51,57 @@ export default function Column({ id, tasks, members, weekdayIndex, date, isToday
         title="Новое дело на этот день"
         onClick={onCreate}
         onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onCreate())}
-        className="flex items-baseline gap-2 rounded-lg px-2 pb-2 pt-1 transition-colors hover:bg-ink/5"
+        className="-mx-1 mb-2 flex min-h-8 items-center gap-2 rounded px-1 transition-colors hover:bg-ink/5"
       >
-        <h2 className={`text-sm font-semibold ${weekend && !isToday ? 'text-ink-2' : ''}`}>{title}</h2>
-        {date && <span className="text-xs text-ink-3">{shortDate(date)}</span>}
-        {isToday && (
-          <span className="rounded-md bg-orange-500 px-1.5 py-0.5 text-[11px] font-semibold text-white">сегодня</span>
-        )}
+        <h2 className={`truncate text-sm font-medium ${isToday ? 'text-today' : weekend ? 'text-ink-2' : 'text-ink'}`}>
+          {isBacklog ? (
+            title
+          ) : (
+            <>
+              <span className="lg:hidden 2xl:inline">{title}</span>
+              <span className="hidden lg:inline 2xl:hidden">{weekdayShort(weekdayIndex)}</span>
+            </>
+          )}
+        </h2>
+        {date && <span className={`whitespace-nowrap text-xs ${isToday ? 'font-medium text-today' : 'text-ink-3'}`}>{shortDate(date)}</span>}
         {tasks.length > 0 && (
-          <span className="ml-auto text-xs tabular-nums text-ink-3" title="Сделано">
-            {doneCount}/{tasks.length}
+          <span
+            title={`Сделано ${doneCount} из ${tasks.length}`}
+            className={`ml-auto rounded px-1.5 py-px text-xs font-medium tabular-nums text-white ${
+              allDone ? 'bg-ok' : 'bg-badge'
+            }`}
+          >
+            {doneCount > 0 ? `${doneCount}/${tasks.length}` : tasks.length}
           </span>
         )}
       </header>
+      {isToday && <span aria-hidden className="-mt-1.5 mb-2 block h-0.5 rounded-full bg-today" />}
 
       <div
         ref={setNodeRef}
         onClick={(e) => e.target === e.currentTarget && onCreate()}
-        className="flex min-h-12 cursor-pointer flex-col gap-1.5"
+        className="flex min-h-16 cursor-pointer flex-col gap-2 lg:flex-1"
       >
         <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
           {tasks.map((t) => (
             <TaskCard key={t.id} task={t} members={members} onToggle={() => onToggle(t)} onOpen={() => onOpen(t)} />
           ))}
         </SortableContext>
+        <form
+          onSubmit={submit}
+          className="flex items-center gap-1 rounded-md px-1.5 text-ink-3 transition-colors focus-within:bg-surface focus-within:text-ink"
+        >
+          <Plus size={15} className="shrink-0" aria-hidden />
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="Добавить"
+            aria-label={`Новое дело: ${title}`}
+            maxLength={300}
+            className="h-9 min-w-0 flex-1 bg-transparent px-1 text-sm text-ink outline-none placeholder:text-ink-3"
+          />
+        </form>
       </div>
-
-      <form onSubmit={submit} className="mt-1.5 flex items-center gap-1 rounded-xl px-1 focus-within:bg-surface-2">
-        <Plus size={16} className="shrink-0 text-ink-3" aria-hidden />
-        <input
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="Добавить дело"
-          aria-label={`Новое дело: ${title}`}
-          maxLength={300}
-          className="h-10 min-w-0 flex-1 bg-transparent px-1 text-sm outline-none placeholder:text-ink-3"
-        />
-      </form>
     </section>
   )
 }
