@@ -1,0 +1,10 @@
+# Локальные секреты и служебное — на Vercel не нужно
+.env.local
+.env*.local
+invite-link.txt
+node_modules
+dist
+.claude
+demo.html
+src/demo.tsx
+src/api/memory.ts

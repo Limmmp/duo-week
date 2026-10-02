@@ -1,107 +1,142 @@
-import { useState, type FormEvent } from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
-import { Plus } from 'lucide-react'
-import { shortDate, weekdayName, weekdayShort } from '../lib/dates'
-import type { Member, Task } from '../types'
-import TaskCard from './TaskCard'
+import { AlertTriangle, Inbox, MoreHorizontal, Plus } from 'lucide-react'
+import { useBoard } from '../board/BoardContext'
+import { OVERDUE, columnTitle, type ColumnDef } from '../board/layout'
+import { shortDate } from '../lib/dates'
+import type { Task } from '../types'
+import { SortableCard } from './TaskCard'
+import { StatusDot } from './ui'
+import { cx } from '../lib/cx'
 
-type Props = {
-  id: string
-  tasks: Task[]
-  members: Member[]
-  weekdayIndex?: number
-  date?: Date
-  isToday?: boolean
-  onAdd: (title: string) => void
-  onCreate: () => void
-  onToggle: (t: Task) => void
-  onOpen: (t: Task) => void
-}
-
-export default function Column({ id, tasks, members, weekdayIndex, date, isToday, onAdd, onCreate, onToggle, onOpen }: Props) {
-  const { setNodeRef, isOver } = useDroppable({ id })
-  const [draft, setDraft] = useState('')
-  const isBacklog = weekdayIndex === undefined
-  const title = isBacklog ? 'Без даты' : weekdayName(weekdayIndex)
-  const weekend = weekdayIndex === 5 || weekdayIndex === 6
-  const doneCount = tasks.filter((t) => t.done).length
-
-  function submit(e: FormEvent) {
-    e.preventDefault()
-    const title = draft.trim()
-    if (!title) return
-    onAdd(title)
-    setDraft('')
-  }
-
-  const allDone = tasks.length > 0 && doneCount === tasks.length
+/** Заголовок колонки: клик — меню нового дела на этот день, справа счётчик и меню колонки, под ним прогресс. */
+export function ColumnHeader({ column, tasks, addTarget }: { column: ColumnDef; tasks: Task[]; addTarget: string }) {
+  const { openComposer, openColumnMenu, defaultsFor } = useBoard()
+  const done = tasks.filter((t) => t.status === 'done').length
+  const isToday = column.kind === 'day' && column.isToday
+  const muted = column.kind === 'day' && !isToday && (column.weekday >= 5 || column.isPast)
+  const canAdd = column.kind !== 'overdue'
 
   return (
-    <section
-      aria-label={title}
-      data-today={isToday || undefined}
-      className={`flex min-w-0 scroll-mt-4 flex-col border-line py-3 max-lg:border-t max-lg:first:border-t-0 lg:min-w-[160px] lg:flex-1 lg:basis-0 lg:border-l lg:px-2 lg:first:border-l-0 xl:px-2.5 ${
-        isOver ? 'bg-ink/[0.03]' : ''
-      }`}
-    >
-      <header
-        role="button"
-        tabIndex={0}
-        title="Новое дело на этот день"
-        onClick={onCreate}
-        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onCreate())}
-        className="-mx-1 mb-2 flex min-h-8 items-center gap-2 rounded px-1 transition-colors hover:bg-ink/5"
-      >
-        <h2 className={`truncate text-sm font-medium ${isToday ? 'text-today' : weekend ? 'text-ink-2' : 'text-ink'}`}>
-          {isBacklog ? (
-            title
-          ) : (
-            <>
-              <span className="lg:hidden 2xl:inline">{title}</span>
-              <span className="hidden lg:inline 2xl:hidden">{weekdayShort(weekdayIndex)}</span>
-            </>
+    <header className="mb-2">
+      <div className="flex min-h-8 items-center gap-1">
+        <button
+          type="button"
+          disabled={!canAdd}
+          title={canAdd ? 'Новое дело сюда' : undefined}
+          onClick={(e) => openComposer(defaultsFor(addTarget), e.currentTarget.getBoundingClientRect())}
+          className="group/head -mx-1 flex min-w-0 flex-1 items-center gap-1.5 rounded-md px-1 py-1 text-left transition-colors enabled:hover:bg-ink/[0.06]"
+        >
+          {column.kind === 'status' && <StatusDot status={column.status} size={14} />}
+          {column.kind === 'backlog' && <Inbox size={14} className="shrink-0 text-ink-3" aria-hidden />}
+          {column.kind === 'overdue' && <AlertTriangle size={14} className="shrink-0 text-danger" aria-hidden />}
+          <h2
+            className={cx(
+              'truncate text-sm font-medium',
+              isToday ? 'text-today' : muted ? 'text-ink-2' : 'text-ink',
+              column.kind === 'overdue' && 'text-danger',
+            )}
+          >
+            {column.kind === 'day' ? (
+              <>
+                <span className="md:hidden 2xl:inline">{columnTitle(column)}</span>
+                <span className="hidden md:inline 2xl:hidden">{columnTitle(column, true)}</span>
+              </>
+            ) : (
+              columnTitle(column)
+            )}
+          </h2>
+          {column.kind === 'day' && (
+            <span className={cx('whitespace-nowrap text-xs', isToday ? 'font-medium text-today' : 'text-ink-3')}>
+              {shortDate(column.date)}
+            </span>
           )}
-        </h2>
-        {date && <span className={`whitespace-nowrap text-xs ${isToday ? 'font-medium text-today' : 'text-ink-3'}`}>{shortDate(date)}</span>}
+          {isToday && (
+            <span className="rounded bg-today px-1 text-[10px] font-semibold uppercase leading-4 tracking-wide text-white">
+              сегодня
+            </span>
+          )}
+          {canAdd && (
+            <Plus
+              size={14}
+              aria-hidden
+              className="ml-auto shrink-0 text-ink-3 opacity-0 transition-opacity group-hover/head:opacity-100"
+            />
+          )}
+        </button>
         {tasks.length > 0 && (
           <span
-            title={`Сделано ${doneCount} из ${tasks.length}`}
-            className={`ml-auto rounded px-1.5 py-px text-xs font-medium tabular-nums text-white ${
-              allDone ? 'bg-ok' : 'bg-badge'
-            }`}
+            title={`Готово ${done} из ${tasks.length}`}
+            className={cx(
+              'shrink-0 rounded px-1.5 text-xs font-medium leading-5 tabular-nums text-white',
+              done === tasks.length ? 'bg-done' : 'bg-ink-3',
+            )}
           >
-            {doneCount > 0 ? `${doneCount}/${tasks.length}` : tasks.length}
+            {done > 0 ? `${done}/${tasks.length}` : tasks.length}
           </span>
         )}
-      </header>
-      {isToday && <span aria-hidden className="-mt-1.5 mb-2 block h-0.5 rounded-full bg-today" />}
-
-      <div
-        ref={setNodeRef}
-        onClick={(e) => e.target === e.currentTarget && onCreate()}
-        className="flex min-h-16 cursor-pointer flex-col gap-2 lg:flex-1"
-      >
-        <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-          {tasks.map((t) => (
-            <TaskCard key={t.id} task={t} members={members} onToggle={() => onToggle(t)} onOpen={() => onOpen(t)} />
-          ))}
-        </SortableContext>
-        <form
-          onSubmit={submit}
-          className="flex items-center gap-1 rounded-md px-1.5 text-ink-3 transition-colors focus-within:bg-surface focus-within:text-ink"
+        <button
+          type="button"
+          aria-label={`Меню колонки «${columnTitle(column)}»`}
+          onClick={(e) => openColumnMenu(column, e.currentTarget.getBoundingClientRect())}
+          className="grid size-7 shrink-0 place-items-center rounded-md text-ink-3 hover:bg-ink/[0.07] hover:text-ink"
         >
-          <Plus size={15} className="shrink-0" aria-hidden />
-          <input
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder="Добавить"
-            aria-label={`Новое дело: ${title}`}
-            maxLength={300}
-            className="h-9 min-w-0 flex-1 bg-transparent px-1 text-sm text-ink outline-none placeholder:text-ink-3"
-          />
-        </form>
+          <MoreHorizontal size={16} />
+        </button>
       </div>
-    </section>
+      <div className="mt-1 h-[3px] overflow-hidden rounded-full bg-ink/[0.07]" aria-hidden>
+        <div
+          className={cx('h-full rounded-full transition-[width] duration-500', isToday ? 'bg-today' : 'bg-done')}
+          style={{ width: tasks.length ? `${(done / tasks.length) * 100}%` : 0 }}
+        />
+      </div>
+    </header>
+  )
+}
+
+/** Ячейка «дорожка × колонка»: сюда бросают карточки; клик по пустому месту или «+ Добавить» — меню нового дела. */
+export function Cell({
+  id,
+  column,
+  tasks,
+  highlight,
+}: {
+  id: string
+  column: ColumnDef
+  tasks: Task[]
+  highlight: boolean
+}) {
+  const { setNodeRef } = useDroppable({ id })
+  const { openComposer, defaultsFor } = useBoard()
+
+  return (
+    <div
+      ref={setNodeRef}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && column.kind !== 'overdue') {
+          openComposer(defaultsFor(id), { x: e.clientX, y: e.clientY })
+        }
+      }}
+      className={cx(
+        'flex min-h-20 flex-1 flex-col gap-2 rounded-lg p-0.5 transition-colors duration-150',
+        highlight && 'bg-ink/[0.045] outline-2 -outline-offset-2 outline-dashed outline-ink/15',
+      )}
+    >
+      <SortableContext id={id} items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+        {tasks.map((task) => (
+          <SortableCard key={task.id} task={task} />
+        ))}
+      </SortableContext>
+      {column.key !== OVERDUE && (
+        <button
+          type="button"
+          onClick={(e) => openComposer(defaultsFor(id), e.currentTarget.getBoundingClientRect())}
+          className="flex h-8 items-center gap-1.5 rounded-md px-1.5 text-[13px] text-ink-3 transition-colors hover:bg-ink/[0.06] hover:text-ink-2"
+        >
+          <Plus size={15} aria-hidden />
+          Добавить
+        </button>
+      )}
+    </div>
   )
 }

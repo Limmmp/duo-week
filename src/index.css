@@ -5,63 +5,135 @@
 
   --color-page: var(--page);
   --color-board: var(--board);
-  --color-bg: var(--board);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
   --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);
   --color-accent: var(--accent);
   --color-on-accent: var(--on-accent);
+  --color-focus: var(--focus);
+  --color-todo: var(--todo);
+  --color-doing: var(--doing);
+  --color-done: var(--done);
+  --color-warn: var(--warn);
   --color-danger: var(--danger);
-  --color-badge: var(--badge);
-  --color-ok: var(--ok);
-  --color-late: var(--late);
   --color-today: var(--today);
+
+  --shadow-card: var(--card-shadow);
+  --shadow-card-hover: var(--card-shadow-hover);
+  --shadow-pop: var(--pop-shadow);
+  --shadow-lift: var(--lift-shadow);
+
+  --ease-snappy: cubic-bezier(0.2, 0, 0, 1);
+  --animate-pop: pop 160ms var(--ease-snappy);
+  --animate-rise: rise 220ms var(--ease-snappy);
+  --animate-fade: fade 160ms ease-out;
+
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: scale(0.97) translateY(-2px);
+    }
+  }
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+  @keyframes fade {
+    from {
+      opacity: 0;
+    }
+  }
 }
 
-/* Палитра по референсу (Kaiten): лавандовый фон, серо-зелёная панель доски, белые карточки. */
+/*
+ * Палитра по референсу (Kaiten): лавандовый фон, серо-зелёная панель доски, белые карточки.
+ * Статусы — из категориальной палитры dataviz (проверена валидатором в обеих темах):
+ * «в работе» синий, «готово» бирюзовый, «нужно сделать» — нейтральный серый.
+ */
 :root {
+  color-scheme: light;
   --page: #f1ecfb;
   --board: #eef1f0;
   --surface: #ffffff;
-  --surface-2: #f6f8f7;
-  --line: #d5dad8;
+  --surface-2: #f5f7f6;
+  --line: #d9dedc;
+  --line-strong: #c2c8c5;
   --ink: #1f2328;
   --ink-2: #474d52;
   --ink-3: #6b7277;
   --accent: #1f2328;
   --on-accent: #ffffff;
-  --danger: #d32f2f;
-  --badge: #6e6e6e;
-  --ok: #4caf50;
-  --late: #e57373;
-  --today: #1e88e5;
-  --card-shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 0 0 1px rgb(0 0 0 / 0.04);
-  color-scheme: light;
+  --focus: #2a78d6;
+  --todo: #a4aaae;
+  --doing: #2a78d6;
+  --done: #1baf7a;
+  --warn: #eda100;
+  --danger: #e34948;
+  --today: #2a78d6;
+  --card-shadow: 0 1px 2px rgb(16 24 32 / 0.06), 0 0 0 1px rgb(16 24 32 / 0.05);
+  --card-shadow-hover: 0 3px 8px rgb(16 24 32 / 0.08), 0 0 0 1px rgb(16 24 32 / 0.07);
+  --pop-shadow: 0 12px 32px rgb(16 24 32 / 0.16), 0 0 0 1px rgb(16 24 32 / 0.06);
+  --lift-shadow: 0 14px 30px rgb(16 24 32 / 0.22), 0 0 0 1px rgb(16 24 32 / 0.06);
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
-    --page: #111014;
-    --board: #1a1c1e;
-    --surface: #25282b;
-    --surface-2: #202326;
-    --line: #34383c;
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --page: #121316;
+    --board: #1a1c1f;
+    --surface: #25282c;
+    --surface-2: #2c3035;
+    --line: #33373c;
+    --line-strong: #464b51;
     --ink: #eceff1;
     --ink-2: #c3c9cd;
-    --ink-3: #939a9f;
+    --ink-3: #959ca1;
     --accent: #eceff1;
-    --on-accent: #1a1c1e;
-    --danger: #ef5350;
-    --badge: #4f5358;
-    --ok: #43a047;
-    --late: #c85a5a;
-    --today: #64b5f6;
-    --card-shadow: 0 0 0 1px rgb(255 255 255 / 0.05);
-    color-scheme: dark;
+    --on-accent: #1a1c1f;
+    --focus: #3987e5;
+    --todo: #6c7378;
+    --doing: #3987e5;
+    --done: #199e70;
+    --warn: #c98500;
+    --danger: #e66767;
+    --today: #3987e5;
+    --card-shadow: 0 0 0 1px rgb(255 255 255 / 0.06);
+    --card-shadow-hover: 0 0 0 1px rgb(255 255 255 / 0.12);
+    --pop-shadow: 0 16px 40px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.08);
+    --lift-shadow: 0 18px 40px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.1);
   }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --page: #121316;
+  --board: #1a1c1f;
+  --surface: #25282c;
+  --surface-2: #2c3035;
+  --line: #33373c;
+  --line-strong: #464b51;
+  --ink: #eceff1;
+  --ink-2: #c3c9cd;
+  --ink-3: #959ca1;
+  --accent: #eceff1;
+  --on-accent: #1a1c1f;
+  --focus: #3987e5;
+  --todo: #6c7378;
+  --doing: #3987e5;
+  --done: #199e70;
+  --warn: #c98500;
+  --danger: #e66767;
+  --today: #3987e5;
+  --card-shadow: 0 0 0 1px rgb(255 255 255 / 0.06);
+  --card-shadow-hover: 0 0 0 1px rgb(255 255 255 / 0.12);
+  --pop-shadow: 0 16px 40px rgb(0 0 0 / 0.5), 0 0 0 1px rgb(255 255 255 / 0.08);
+  --lift-shadow: 0 18px 40px rgb(0 0 0 / 0.55), 0 0 0 1px rgb(255 255 255 / 0.1);
 }
 
 html,
@@ -70,6 +142,7 @@ body {
   color: var(--ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
 }
 
 button,
@@ -78,16 +151,42 @@ button,
   touch-action: manipulation;
 }
 
+button:disabled {
+  cursor: default;
+}
+
 :focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
+}
+
+/* У полей ввода фокус показывает их собственная рамка или подсветка контейнера. */
+input:focus-visible,
+textarea:focus-visible {
+  outline: none;
+}
+
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+dialog::backdrop {
+  background: rgb(10 12 16 / 0.45);
+}
+
+/* Тонкая полоса прокрутки у доски — широкая системная съедает место под карточки. */
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
 }
 
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    transition-duration: 0ms !important;
-    animation-duration: 0ms !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

@@ -1,47 +1,42 @@
-import { useEffect, useState } from 'react'
-import type { Session } from '@supabase/supabase-js'
-import { supabase } from './lib/supabase'
-import Login from './components/Login'
-import Board from './components/Board'
+import { useCallback, useMemo, useState } from 'react'
+import { createSupabaseApi } from './api/supabase'
+import { BoardRoot } from './components/Board'
+import { KeyScreen } from './components/Onboarding'
+import { ToastProvider } from './components/Toasts'
+import { forgetBoardKey, initialBoardKey, rememberBoardKey } from './lib/storage'
 
 export default function App() {
-  const [session, setSession] = useState<Session | null | undefined>(undefined)
-  const [isMember, setIsMember] = useState<boolean | undefined>(undefined)
+  const [key, setKey] = useState(() => initialBoardKey())
+  const [denied, setDenied] = useState(false)
+  const api = useMemo(() => (key ? createSupabaseApi(key) : null), [key])
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSession(data.session))
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
-    return () => data.subscription.unsubscribe()
+  const onDenied = useCallback(() => {
+    forgetBoardKey()
+    setKey(null)
+    setDenied(true)
+  }, [])
+  const onForget = useCallback(() => {
+    forgetBoardKey()
+    setKey(null)
+    setDenied(false)
   }, [])
 
-  useEffect(() => {
-    if (!session) return
-    setIsMember(undefined)
-    supabase.rpc('is_member').then(({ data }) => setIsMember(Boolean(data)))
-  }, [session?.user.id])
-
-  if (session === undefined || (session && isMember === undefined)) {
-    return <div className="grid min-h-dvh place-items-center text-ink-3">Загрузка…</div>
-  }
-  if (!session) return <Login />
-  if (!isMember) {
+  if (!api) {
     return (
-      <div className="grid min-h-dvh place-items-center p-4">
-        <div className="w-full max-w-sm rounded-2xl border border-line bg-surface p-6 text-center">
-          <h1 className="text-lg font-semibold">Нет доступа к доске</h1>
-          <p className="mt-2 text-sm text-ink-2">
-            Адрес <b>{session.user.email}</b> пока не добавлен в участники. Попроси владельца доски
-            добавить его.
-          </p>
-          <button
-            onClick={() => supabase.auth.signOut()}
-            className="mt-5 h-11 w-full rounded-xl border border-line text-sm font-medium hover:bg-surface-2"
-          >
-            Выйти
-          </button>
-        </div>
-      </div>
+      <KeyScreen
+        error={denied ? 'Доска по этой ссылке не найдена. Попроси прислать ссылку ещё раз.' : undefined}
+        onKey={(k) => {
+          rememberBoardKey(k)
+          setDenied(false)
+          setKey(k)
+        }}
+      />
     )
   }
-  return <Board userEmail={session.user.email ?? ''} />
+
+  return (
+    <ToastProvider>
+      <BoardRoot key={key} api={api} onDenied={onDenied} onForget={onForget} />
+    </ToastProvider>
+  )
 }
