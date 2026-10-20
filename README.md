@@ -1,32 +1,29 @@
-# React + TypeScript + Vite
+# Неделя на двоих
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Канбан-доска на неделю для двух человек. Без регистрации: вход по секретной ссылке-приглашению, изменения прилетают обоим в реальном времени.
 
-Currently, two official plugins are available:
+**Демо:** https://duo-week.vercel.app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Что умеет
 
-## React Compiler
+- **Доступ по ссылке.** Ключ доски передаётся в заголовке `x-board-key` и проверяется политиками RLS в Supabase, аккаунты не нужны.
+- **Drag and drop** между днями, статусами и дорожками участников (dnd-kit), с оптимистичными обновлениями.
+- **Быстрое добавление с разбором текста:** `Купить билеты @Макс #поездка ! завтра 18:30` → исполнитель, тег, приоритет, дата и время.
+- **Карточка задачи:** чек-лист, теги, время, приоритет; отмена удаления.
+- **Статистика недели:** прогресс, столбцы по дням, вклад каждого участника.
+- **Мгновенное открытие:** последний снимок доски кэшируется локально, свежие данные подтягиваются следом.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Стек
 
-## Expanding the Oxlint configuration
+React 19 · TypeScript · Vite · Tailwind CSS 4 · dnd-kit · Supabase (Postgres, RLS, Realtime) · Vitest · Oxlint · Vercel
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Запуск
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+cp .env.example .env.local   # вписать URL и anon-ключ своего проекта Supabase
+npm run dev
+npm test                     # юнит-тесты парсера и сортировки
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Посмотреть интерфейс без Supabase можно через `demo.html`: там доска работает на in-memory-бэкенде (`src/api/memory.ts`).
