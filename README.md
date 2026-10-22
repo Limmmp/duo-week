@@ -1,5 +1,24 @@
+<div align="center">
+
+<img src="docs/board.jpg" alt="Неделя на двоих">
+
 # Неделя на двоих
 
+**Канбан-доска на неделю для двоих: вход по секретной ссылке, realtime, drag and drop.**
+
+<img src="https://img.shields.io/badge/React_19-149ECA?style=flat-square&logo=react&logoColor=white" alt="React 19"> <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript"> <img src="https://img.shields.io/badge/Tailwind_4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind 4"> <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=flat-square&logo=supabase&logoColor=white" alt="Supabase"> <img src="https://img.shields.io/badge/Vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white" alt="Vitest"> <img src="https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white" alt="Vercel">
+
+<a href="https://duo-week.vercel.app"><img src="https://img.shields.io/badge/▶_Открыть_демо-000000?style=for-the-badge" alt="Демо"></a>
+
+</div>
+
+<table>
+<tr>
+<td align="center" valign="top"><img src="docs/mobile.jpg" alt="Мобильная версия" width="260"></td>
+</tr>
+</table>
+
+<!-- header:end -->
 Канбан-доска на неделю для двух человек. Без регистрации: вход по секретной ссылке-приглашению, изменения прилетают обоим в реальном времени.
 
 **Демо:** https://duo-week.vercel.app
